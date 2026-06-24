@@ -15,6 +15,7 @@ const app = express();
 // Middleware
 const corsOptions = {
     origin:'https://eventora-event-booking-system-94gn.onrender.com',
+    // origin: 'http://localhost:5173',
     credentials:true
 }
 
