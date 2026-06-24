@@ -13,7 +13,12 @@ const bookingRoutes = require("./routes/bookings");
 const app = express();
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+    origin:'https://eventora-event-booking-system-94gn.onrender.com',
+    credentials:true
+}
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
