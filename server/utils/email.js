@@ -94,15 +94,19 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-// Brevo SMTP Transporter Setup
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
-  port: 465,         // 587 ki jagah 465 kar dein
-  secure: true,      // 465 ke liye ise true karna zaroori hai
+  port: 2525,        // Block bypass karne wala port
+  secure: false,     
   auth: {
     user: process.env.EMAIL_USER, 
     pass: process.env.EMAIL_PASS, 
-  }
+  },
+  tls: {
+    rejectUnauthorized: false
+  },
+  connectionTimeout: 60000, // 60 seconds (agar Render slow hai toh rukega)
+  greetingTimeout: 30000
 });
 
 // Connection check karne ke liye
