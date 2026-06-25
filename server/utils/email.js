@@ -18,7 +18,7 @@ transporter.verify((error, success) => {
   if (error) {
     console.log("SMTP Error:", error);
   } else {
-    console.log("Brevo SMTP Ready");
+    console.log("Brevo SMTP Ready",process.env.EMAIL_PASS,process.env.EMAIL_USER);
   }
 });
 
