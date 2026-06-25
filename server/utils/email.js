@@ -88,53 +88,40 @@
 // module.exports = { sendBookingEmail, sendOTPEmail };
 
 
-
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 2525,        // Block bypass karne wala port
-  secure: false,     
-  auth: {
-    user: process.env.EMAIL_USER, 
-    pass: process.env.EMAIL_PASS, 
-  },
-  tls: {
-    rejectUnauthorized: false
-  },
-  connectionTimeout: 60000, // 60 seconds (agar Render slow hai toh rukega)
-  greetingTimeout: 30000
-});
-
-// Connection check karne ke liye
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("❌ Brevo SMTP Connection Failed:", error);
-  } else {
-    console.log("✅ Brevo SMTP Connected & Ready!");
-  }
-});
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
 const sendBookingEmail = async (userEmail, userName, eventTitle) => {
     try {
-        const mailOptions = {
-            // From mein aapka verified sender email hona zaroori hai
-            from: `"Eventora" <${process.env.VERIFIED_SENDER_EMAIL}>`, 
-            to: userEmail,
+        const payload = {
+            sender: { 
+                name: "Eventora", 
+                email: process.env.VERIFIED_SENDER_EMAIL 
+            },
+            to: [{ email: userEmail }],
             subject: `Booking Confirmed: ${eventTitle}`,
-            html: `
-        <h2>Hi ${userName}!</h2>
-        <p>Your booking for the event <strong>${eventTitle}</strong> is successfully confirmed.</p>
-        <p>Thank you for choosing Eventora.</p>
-      `
+            htmlContent: `
+                <h2>Hi ${userName}!</h2>
+                <p>Your booking for the event <strong>${eventTitle}</strong> is successfully confirmed.</p>
+                <p>Thank you for choosing Eventora.</p>
+            `
         };
-        await transporter.sendMail(mailOptions);
-        console.log('📧 Booking Email sent to', userEmail);
+
+        await axios.post(BREVO_API_URL, payload, {
+            headers: {
+                'accept': 'application/json',
+                'api-key': process.env.BREVO_API_KEY,
+                'content-type': 'application/json'
+            }
+        });
+        
+        console.log('✅ Booking Email sent via Brevo API to', userEmail);
     } catch (error) {
-        console.error('❌ Error sending booking email:', error);
+        console.error('❌ API Error (Booking):', error.response ? error.response.data : error.message);
     }
 };
 
@@ -145,11 +132,14 @@ const sendOTPEmail = async (userEmail, otp, type) => {
             ? 'Please use the following OTP to verify your new Eventora account.'
             : 'Please use the following OTP to verify and confirm your event booking.';
 
-        const mailOptions = {
-            from: `"Eventora" <${process.env.VERIFIED_SENDER_EMAIL}>`, // From email updated here too
-            to: userEmail,
+        const payload = {
+            sender: { 
+                name: "Eventora", 
+                email: process.env.VERIFIED_SENDER_EMAIL 
+            },
+            to: [{ email: userEmail }],
             subject: title,
-            html: `
+            htmlContent: `
                 <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
                     <h2 style="color: #111;">${title}</h2>
                     <p style="color: #555; font-size: 16px;">${msg}</p>
@@ -160,10 +150,18 @@ const sendOTPEmail = async (userEmail, otp, type) => {
                 </div>
             `
         };
-        await transporter.sendMail(mailOptions);
-        console.log(`🔑 OTP sent to ${userEmail} for ${type}`);
+
+        await axios.post(BREVO_API_URL, payload, {
+            headers: {
+                'accept': 'application/json',
+                'api-key': process.env.BREVO_API_KEY,
+                'content-type': 'application/json'
+            }
+        });
+
+        console.log(`✅ API OTP sent to ${userEmail} for ${type}`);
     } catch (error) {
-        console.error('❌ Error sending OTP email:', error);
+        console.error('❌ API Error (OTP):', error.response ? error.response.data : error.message);
     }
 };
 
